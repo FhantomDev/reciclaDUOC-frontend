@@ -11,7 +11,7 @@ export default function RecycleScreen() {
     const { colors } = useTheme();
 
     const api2 = axios.create({
-        baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
+        baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:https://8vq95vp3-8000.brs.devtunnels.ms",
     });
 
     const uploadIA = async (imageBlobOrFile) => {
