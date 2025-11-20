@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App de Admin - Escáner</title>
+    <!-- Incluimos la librería para escanear QRs -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      #qr-reader {
+        width: 100%;
+        max-width: 500px;
+        margin: auto;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-900 text-white flex items-center justify-center min-h-screen"
+  >
+    <div
+      class="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-lg w-full"
+    >
+      <h1 class="text-3xl font-bold mb-6">Validar Premio</h1>
+
+      <!-- El escáner de QR se montará aquí -->
+      <div id="qr-reader" class="rounded-lg overflow-hidden"></div>
+
+      <!-- Los resultados de la validación aparecerán aquí -->
+      <div id="result-container" class="mt-6 text-lg">
+        <p id="result-message" class="font-semibold">Esperando escaneo...</p>
+      </div>
+      <button
+        id="resetButton"
+        class_exists="hidden"
+        class="mt-4 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition hidden"
+      >
+        Escanear Otro
+      </button>
+    </div>
+
+    <script>
+      const resultMessage = document.getElementById("result-message");
+      const resultContainer = document.getElementById("result-container");
+      const resetButton = document.getElementById("resetButton");
+      const qrReaderElement = document.getElementById("qr-reader");
+
+      // --- SIMULACIÓN DE BASE DE DATOS DE CÓDIGOS RECLAMADOS ---
+      // En una app real, esto estaría en tu servidor (Firestore, SQL, etc.)
+      const redeemedCodes = {};
+      // ---------------------------------------------------------
+
+      function onScanSuccess(decodedText, decodedResult) {
+        // El escáner se detiene automáticamente al tener éxito.
+        console.log(`Código escaneado: ${decodedText}`);
+
+        // --- INICIO DE LA SIMULACIÓN DEL BACKEND (Validación) ---
+        // 1. En una app real, aquí harías:
+        // const response = await fetch('/api/validate-claim', {
+        //     method: 'POST',
+        //     body: JSON.stringify({ claimId: decodedText })
+        // });
+        // const validationResult = await response.json();
+        // processValidation(validationResult);
+
+        // 2. Para este demo, simulamos la validación:
+        let validationResult;
+        if (redeemedCodes[decodedText]) {
+          // Escenario: YA USADO
+          validationResult = {
+            success: false,
+            message: `Error: El código ya fue reclamado.`,
+          };
+        } else if (decodedText.startsWith("claim-")) {
+          // Escenario: ÉXITO
+          redeemedCodes[decodedText] = true; // Marcamos como usado
+          validationResult = {
+            success: true,
+            message: `Éxito: Premio validado (ID: ${decodedText.substring(
+              0,
+              20
+            )}...)`,
+          };
+        } else {
+          // Escenario: INVÁLIDO
+          validationResult = {
+            success: false,
+            message: "Error: Código QR no válido.",
+          };
+        }
+        // --- FIN DE LA SIMULACIÓN ---
+
+        processValidation(validationResult);
+      }
+
+      function processValidation(result) {
+        if (result.success) {
+          resultMessage.textContent = result.message;
+          resultContainer.className =
+            "mt-6 text-lg font-bold p-4 rounded-lg bg-green-600 text-white";
+        } else {
+          resultMessage.textContent = result.message;
+          resultContainer.className =
+            "mt-6 text-lg font-bold p-4 rounded-lg bg-red-600 text-white";
+        }
+        qrReaderElement.classList.add("hidden"); // Oculta el escáner
+        resetButton.classList.remove("hidden"); // Muestra el botón de reset
+      }
+
+      function onScanFailure(error) {
+        // No hacemos nada, solo logueamos errores menores.
+      }
+
+      // Inicializar el escáner
+      let html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        /* verbose= */ false
+      );
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
+      // Lógica del botón de reseteo
+      resetButton.addEventListener("click", () => {
+        // No podemos reiniciar el scanner fácilmente, lo más simple es recargar la página
+        // o limpiar el estado y volver a renderizar (para este demo, recargamos).
+        window.location.reload();
+      });
+    </script>
+  </body>
+</html>
